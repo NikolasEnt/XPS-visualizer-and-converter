@@ -6,11 +6,11 @@ shinyUI(fluidPage(
   
   # Application title
   titlePanel("XPS visualizer and converter"),
-  
+  h5(tags$i("ver. 1.1.0")),
   # Sidebar with a slider input for number of bins 
   sidebarLayout(
     sidebarPanel(
-      fileInput('file_to_open', 'Choose .xy File', accept=c('text/csv','text/comma-separated-values,text/plain', '.csv', '.xy', '.txt')),
+      fileInput('file_to_open', 'Choose .xy File', accept=c('.xy')),
       radioButtons("entype", "Set desired energy type:",
                    c("Kinetic Energy" = "ke",
                      "Binding Energy" = "be"),
@@ -18,16 +18,29 @@ shinyUI(fluidPage(
       numericInput("exe", "Excitation energy, eV:", 770, min = 0, max = 10000),
       actionButton("go", "Upload!"),
       uiOutput("range_slider"),
+      uiOutput("angle_slider"),
+      uiOutput("help_text"),
+      uiOutput("batchfiles"),
+      fluidRow(
+        column(6, uiOutput("preview_button")),
+        column(6, uiOutput("process_button"))
+      ),
       h5("The app was created by Nikolay Falaleev"),
-      h5(tags$i("e-mail: falaleevn@yandex.ru"))
+      h5(tags$i("e-mail: falaleevn@yandex.ru")),
+      textOutput("deb")
     ),
     
     mainPanel(
        plotOutput("distPlot"),
        plotOutput("sumPlot"),
-       downloadButton('download_all', 'Download all spectra'),
+       radioButtons("septype", "Set desired decimal separator:",
+                    c("comma (,)" = "c",
+                      "period (.)" = "p"),
+                    inline = TRUE),
+       downloadButton('download_sum', 'Download cumulative spectrum'),
        downloadButton('download_roi', 'Download ROI spectra'),
-       downloadButton('download_sum', 'Download cumulative spectrum')
+       downloadButton('download_all', 'Download all spectra'),
+       plotOutput("preview_plot")
     )
   )
 ))
