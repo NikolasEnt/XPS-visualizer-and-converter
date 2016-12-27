@@ -1,14 +1,10 @@
-
 library(shiny)
 library(ggplot2)
 library(reshape2)
-require(gridExtra)
+library(scatterplot3d)
 
-
-
-# Define server logic required to draw a histogram
 shinyServer(function(input, output) {
-
+  #Define default values
   data_spec <- NULL
   number_of_rows <- 1
   number_of_columns <- 1
@@ -38,7 +34,7 @@ shinyServer(function(input, output) {
     output$angle_slider <- renderUI({
       sliderInput("angle", label = "Rotate ange of the 3D plot", min=0, max=90, value = 75, step=1)
     })
-    output$help_text <- renderText( "Upload a batch of files in order to process them by subsampling the ROI and computing cumulative spectra")
+    output$help_text <- renderText( "Upload a batch of files in order to process them by subsampling the ROI and computing cumulative spectra. Use \"Process!\" button to download a .csv file with the spectra.")
     
     output$batchfiles <- renderUI({
       fileInput('files_to_open', 'Choose .xy files to process with the selected above settings', accept=c('.xy'), multiple = TRUE)
@@ -113,7 +109,8 @@ observeEvent(input$go,{
     }
     
     scatterplot3d(x, y, za, type = "n", box = FALSE,
-                 angle = ang, xlim=xlimit, x.ticklabs = NA, xlab = xlabel, ylab = "Channel #", zlab = "Cps", main = "Plot of the input file")->sp
+                 angle = ang, xlim=xlimit, x.ticklabs = NA, xlab = xlabel, ylab = "Channel #",
+                 zlab = "Cps", main = paste("Plot of the input file ", toString(input$file_to_open[1])))->sp
     text(sp$xyz.convert(ma.x[lab], rep(min(y),length(lab)), rep(min(za) - (max(za)-min(za))/25,length(lab))), labels=paste(x[lab], sep=" "), cex=.8)
     for (i in c(2:(number_of_columns+1))){
       sp$points3d(x, y = rep.int(i-1,number_of_rows), z=data_spec_sm[,i], type = "l", lwd=1, xlim=xlimit)
@@ -188,9 +185,10 @@ output$download_roi <- downloadHandler(
 
 
 observeEvent(input$preview, { 
-
+  rows <- (length(input$files_to_open[,1])%/%2+length(input$files_to_open[,1])%%2)
   output$preview_plot<-renderPlot({
-    par(mfrow=c((length(input$files_to_open[,1])%/%2+length(input$files_to_open[,1])%%2),3))
+    
+    par(mfrow=c(rows,3))
     for (i in 1:length(input$files_to_open[,1])){
       inFile <- input$files_to_open[[i, 'name']]
       d = read.table(input$files_to_open[[i, 'datapath']], sep=" ", fill=FALSE, strip.white=TRUE)
@@ -228,20 +226,19 @@ observeEvent(input$preview, {
   
     
    
-  })
-  })
+  }, width = 720, height = rows*240 ) #
+})
 
 output$process <- downloadHandler(
   
   filename = function() {
     
-    paste(gsub( ".xy", "", toString(input$files_to_open[[1, 'name']])), '_seria.csv', sep='')
+    paste(gsub( ".xy", "", toString(input$files_to_open[[1, 'name']])),
+          '_seria_', toString(input$Range_Slider[1]), '_', toString(input$Range_Slider[2]), '.csv', sep='')
     },
   content = function(file) {
-    ldf<-data.frame()
+    ldf<-data.frame(a=NA, b=NA)[numeric(0), ]
     max_rows<-0
-    x_list<-list()
-    y_list<-list()
     for (i in 1:length(input$files_to_open[,1])){ 
       inFile <- input$files_to_open[[i, 'name']]
       d = read.table(input$files_to_open[[i, 'datapath']], sep=" ", fill=FALSE, strip.white=TRUE)
@@ -270,21 +267,30 @@ output$process <- downloadHandler(
         pointer<-pointer+number_of_rows2
         colnames(data_spec)[i]<<-paste("Curve ", toString(i-2))
       }
-      x_list[i]<-data_spec[,1]
-      y_list[i]<-rowSums(data_spec[c(colnames(data_spec)[(input$Range_Slider[1]+1):(input$Range_Slider[2]+1)])])/1000
+      x<-data_spec[,1]
+      y<-rowSums(data_spec[c(colnames(data_spec)[(input$Range_Slider[1]+1):(input$Range_Slider[2]+1)])])
+      ldf_sm<-data.frame(matrix(c(rep.int(NA,max_rows*2)),nrow=max_rows,ncol=2))
+      if (length(x)<max_rows){
+        x <- c(x, rep(c(rep.int(NA,(max_rows-length(x))*2))))
+        y <- c(y, rep(c(rep.int(NA,(max_rows-length(y))*2))))
+      }
+      ldf_sm[1:max_rows, 1:2]<- data.frame(cbind(x,y))
+      colnames(ldf_sm) <- c(paste(xlabel, sep = " "), toString(inFile))
+      if (length(ldf[,1])<max_rows){
+        df_na <- data.frame(matrix(c(rep.int(NA,length(ldf))),nrow=(max_rows-length(ldf[,1])),ncol=length(ldf)))
+        colnames(df_na) <- colnames(ldf)
+        ldf <- rbind(ldf,df_na)
+      }
+      if (i>1){
+        ldf<-cbind(ldf, ldf_sm)
+      }
+      else{
+        ldf[1:max_rows, 1:2]<- ldf_sm
+      }
+      
     }
     
-    for (i in 1:length(input$files_to_open[,1])){
-      #x_list[[i]] <- c(x_list[[i]], rep(NA, max_rows - length(x_list[[i]])))
-      #y_list[[i]] <- c(y_list[[i]], rep(NA, max_rows - length(y_list[[i]])))
-      print((x_list[i]))
-      print((y_list[i]))
-      #ldf<-cbind(ldf, x_list[[i]], y_list[[i]])
-    }
-    
-    # roidf <- data_spec[,c(1,(input$Range_Slider[1]+1):(input$Range_Slider[2]+1))]
-    # colnames(roidf)[1]<-xlabel
-    write.table(ldf, file,row.names=FALSE, sep=";", dec=decs)
+    write.table(ldf[,3:length(ldf)], file,row.names=FALSE, sep=";", dec=decs, na="")
   }
 )
 

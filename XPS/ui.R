@@ -27,7 +27,7 @@ shinyUI(fluidPage(
       ),
       h5("The app was created by Nikolay Falaleev"),
       h5(tags$i("e-mail: falaleevn@yandex.ru")),
-      textOutput("deb")
+      helpText(a("See source code",href="https://github.com/NikolasEnt/XPS-visualizer-and-converter"))
     ),
     
     mainPanel(
