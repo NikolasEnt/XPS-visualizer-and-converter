@@ -15,7 +15,7 @@ shinyUI(fluidPage(
                    c("Kinetic Energy" = "ke",
                      "Binding Energy" = "be"),
                    inline = TRUE),
-      numericInput("exe", "Excitation energy, eV:", 770, min = 0, max = 10000),
+      numericInput("exe", "Excitation energy, eV:", 770, min = 0, max = 10000, step=0.1),
       actionButton("go", "Upload!"),
       uiOutput("range_slider"),
       uiOutput("angle_slider"),
