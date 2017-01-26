@@ -1,18 +1,16 @@
 library(shiny)
 # Define UI for the application
 shinyUI(fluidPage(
-  # Application title
-  titlePanel("XPS visualizer and converter"),
+  titlePanel("XPS visualizer and converter"), # Application title
   h5(tags$i("ver. 1.1.0")),
   # Sidebar with inputs
   sidebarLayout(
     sidebarPanel(
       fileInput('file_to_open', 'Choose .xy File', accept=c('.xy')), #file input
       radioButtons("entype", "Set desired energy type:",
-                   c("Kinetic Energy" = "ke",
-                     "Binding Energy" = "be"), #Energy type select radiobutton
-                   inline = TRUE),
-      numericInput("exe", "Excitation energy, eV:", 770, min = 0, max = 10000, step=0.1),
+                   c("Kinetic Energy" = "ke", "Binding Energy" = "be"),
+                   inline = TRUE), #Energy type select radiobutton
+      numericInput("exe", "Excitation energy, eV:", 770, min = 0, max = 10000, step=0.1), #Excitation energy input field
       actionButton("go", "Upload!"),
       uiOutput("range_slider"),
       uiOutput("angle_slider"),
@@ -31,12 +29,13 @@ shinyUI(fluidPage(
        plotOutput("distPlot"), #3D plot
        plotOutput("sumPlot"), #Cumulative plot
        radioButtons("septype", "Set desired decimal separator:",
-                    c("comma (,)" = "c",
-                      "period (.)" = "p"),
-                    inline = TRUE),
+                    c("comma (,)" = "c", "period (.)" = "p"),
+                    inline = TRUE), #Decimal separator selector
+       #Download buttons
        downloadButton('download_sum', 'Download cumulative spectrum'),
        downloadButton('download_roi', 'Download ROI spectra'),
        downloadButton('download_all', 'Download all spectra'),
+       #Preview plots panel
        plotOutput("preview_plot")
     )
   )
