@@ -11,3 +11,6 @@ Some examples of input files are included in the "example" directory.
 
 ##License
 The project source is distributed under GNU v.3 license. See the LICENSE file for details
+
+##Known bugs
+After detailed examination of individual spectrum, please, reload the app, before uploading a new one, as there could be issues with number of angular channels.
