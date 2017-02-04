@@ -28,9 +28,12 @@ shinyUI(fluidPage(
     mainPanel(
        plotOutput("distPlot"), #3D plot
        plotOutput("sumPlot"), #Cumulative plot
-       radioButtons("septype", "Set desired decimal separator:",
+       fluidRow(
+         column(4,radioButtons("septype", "Set desired decimal separator:",
                     c("comma (,)" = "c", "period (.)" = "p"),
-                    inline = TRUE), #Decimal separator selector
+                    inline = TRUE)), #Decimal separator selector
+         column(3,checkboxInput('norm', 'Normalize output', value = FALSE, width = NULL))
+       ),
        #Download buttons
        downloadButton('download_sum', 'Download cumulative spectrum'),
        downloadButton('download_roi', 'Download ROI spectra'),

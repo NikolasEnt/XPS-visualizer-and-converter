@@ -40,6 +40,20 @@ shinyServer(function(input, output) {
     }
     return(data_spec)
   }
+  #Function for intensity normalization into [0,1] range
+  normal_range <- function(x){
+    min_x <- min(x, na.rm = TRUE)
+    max_x <- max(x, na.rm = TRUE)
+    normal <- (x-min_x)/(max_x-min_x)
+    return(normal)
+  }
+  #Normalize each column
+  normal_df <- function(x){
+    for (i in c(1:length(x))){
+      x[,i] <- normal_range(x[,i])
+    }
+    return(x)
+  }
   in_data <- reactive({
     inFile <- input$file_to_open
     if (is.null(inFile))
@@ -142,16 +156,26 @@ observeEvent(input$septype, {
 output$download_all <- downloadHandler(
   filename = function() { paste(gsub( ".xy", "", toString(input$file_to_open[1] )), '_all.csv', sep='') },
   content = function(file) {
-    colnames(data_spec)[1] <- xlabel
-    write.table(data_spec, file,row.names=FALSE, sep=";", dec=decs)
+    data_spec_l <- data_spec #Create local copy of data_spec
+    if (input$norm){
+      data_spec_l <- data.frame(data_spec[,1], normal_df(data_spec_l[,2:length(data_spec_l)]))
+    }
+    colnames(data_spec_l)[1] <- xlabel
+    write.table(data_spec_l, file,row.names=FALSE, sep=";", dec=decs)
   }
 )
 output$download_sum <- downloadHandler(
   filename = function() { paste(gsub( ".xy", "", toString(input$file_to_open[1] )), '_sum.csv', sep='') },
   content = function(file) {
-    sumdf <- data.frame(data_spec[,1], sum)
+    if (input$norm){
+      sumdf <- data.frame(data_spec[,1], normal_range(sum))
+      colnames(sumdf)[2] <- "Intensity, a.u."
+    }
+    else {
+      sumdf <- data.frame(data_spec[,1], sum)
+      colnames(sumdf)[2] <- "cps, 1000*"
+    }
     colnames(sumdf)[1] <- xlabel
-    colnames(sumdf)[2] <- "cps, 1000*"
     write.table(sumdf, file,row.names=FALSE, sep=";", dec=decs)
   }
 )
@@ -159,6 +183,9 @@ output$download_roi <- downloadHandler(
   filename = function() { paste(gsub( ".xy", "", toString(input$file_to_open[1] )), '_roi.csv', sep='') },
   content = function(file) {
     roidf <- data_spec[,c(1,(input$Range_Slider[1]+1):(input$Range_Slider[2]+1))]
+    if (input$norm){
+      roidf <- data.frame(data_spec[,1], normal_df(roidf[,2:length(roidf)]))
+    }
     colnames(roidf)[1] <- xlabel
     write.table(roidf, file,row.names=FALSE, sep=";", dec=decs)
   }
@@ -219,7 +246,10 @@ output$process <- downloadHandler(
         ldf[1:max_rows, 1:2] <- ldf_sm
       }
     }
-    write.table(ldf[,1:length(ldf)], file,row.names=FALSE, sep=";", dec=decs, na="")
+    if (input$norm){
+        ldf[, seq.int(2, length(ldf), 2)] <- data.frame(normal_df(ldf[, seq.int(2, length(ldf), 2)]))
+    }
+    write.table(ldf, file, row.names = FALSE, sep = ";", dec = decs, na = "")
   })
 })
 
