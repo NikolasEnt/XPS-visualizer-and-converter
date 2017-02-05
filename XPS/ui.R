@@ -2,7 +2,7 @@ library(shiny)
 # Define UI for the application
 shinyUI(fluidPage(
   titlePanel("XPS visualizer and converter"), # Application title
-  h5(tags$i("ver. 1.1.0")),
+  h5(tags$i("ver. 1.1.1")),
   # Sidebar with inputs
   sidebarLayout(
     sidebarPanel(
@@ -11,7 +11,7 @@ shinyUI(fluidPage(
                    c("Kinetic Energy" = "ke", "Binding Energy" = "be"),
                    inline = TRUE), #Energy type select radiobutton
       numericInput("exe", "Excitation energy, eV:", 770, min = 0, max = 10000, step=0.1), #Excitation energy input field
-      actionButton("go", "Upload!"),
+      actionButton("go", "Upload!"), #Start process button
       uiOutput("range_slider"),
       uiOutput("angle_slider"),
       uiOutput("help_text"),
