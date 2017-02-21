@@ -9,9 +9,18 @@ This app was developed to make it easier to convert raw .xy files from X-ray Pho
 *Sample screenshot of the application*
 
 ## Run the app
+### Web application
 The most recent app release is available [online](https://nikolasent.shinyapps.io/XPS_visualizer_and_converter/) as a Shiny app.
 
 Some examples of input files are included in the "example" directory.
+### Local application
+The app could be used locally. It needs *R* (and [Rstudio](https://www.rstudio.com/), optionally) and the following libraries:
+```R
+shiny
+ggplot2
+reshape2
+scatterplot3d
+```
 
 ## Authors
 - __Nikolay Falaleev__ - *The main author* Github: [NikolasEnt](https://github.com/NikolasEnt), Twitter: [@NFalaleev](https://twitter.com/NFalaleev)
